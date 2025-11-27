@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
+  "packages": [
+    "gcc@latest",
+    "go@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "source .secrets/env.sh"
+    ],
+    "scripts": {}
+  }
+}
