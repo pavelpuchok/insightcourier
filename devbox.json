@@ -1,13 +1,15 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
+  "env": {
+    "CGO_ENABLED": "0"
+  },
+  "env_from": "secrets.env",
   "packages": [
-    "gcc@latest",
-    "go@latest"
+    "go@latest",
+    "postgresql_18@18.1"
   ],
   "shell": {
-    "init_hook": [
-      "source .secrets/env.sh"
-    ],
+    "init_hook": [],
     "scripts": {}
   }
 }
