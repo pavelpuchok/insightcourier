@@ -17,8 +17,9 @@ type RSSSourceConfig struct {
 	UpdateInterval time.Duration `json:"updateInterval"`
 }
 
-type FileStorageConfig struct {
-	FilePath string
+type PSQLStorageConfig struct {
+	ConnString     string        `json:"-"`
+	DefaultTimeout time.Duration `json:"defaulTimeout"`
 }
 
 type TelegramConfig struct {
@@ -28,11 +29,14 @@ type TelegramConfig struct {
 
 type Config struct {
 	RSSSources  map[string]RSSSourceConfig `json:"rssSources"`
-	FileStorage FileStorageConfig          `json:"fileStorage"`
 	Telegram    TelegramConfig             `json:"telegram"`
+	PSQLStorage PSQLStorageConfig          `json:"psqlStorage"`
 }
 
-var DefaultRSSUpdateInterval = 5 * time.Minute
+var (
+	DefaultRSSUpdateInterval = 5 * time.Minute
+	DefaultPSQLTimeout       = 5 * time.Second
+)
 
 func Load(path string, env EnvVarProvider) (*Config, error) {
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
@@ -48,15 +52,16 @@ func Load(path string, env EnvVarProvider) (*Config, error) {
 		return nil, fmt.Errorf("unable decode config. %w", err)
 	}
 
-	if cfg.FileStorage.FilePath == "" {
-		cfg.FileStorage.FilePath = "/tmp/insightcourier.json"
-	}
-
 	apiKey, has := env.LookupEnv("IC_TG_BOT_API_KEY")
 	if !has || apiKey == "" {
 		return nil, errors.New("environment variable IC_TG_BOT_API_KEY should be set to non empty value")
 	}
 	cfg.Telegram.APIKey = apiKey
+
+	cfg.PSQLStorage.ConnString, _ = env.LookupEnv("IC_PSQL_CONNECTION_STRING")
+	if cfg.PSQLStorage.DefaultTimeout == 0 {
+		cfg.PSQLStorage.DefaultTimeout = DefaultPSQLTimeout
+	}
 
 	for i := range cfg.RSSSources {
 		if cfg.RSSSources[i].UpdateInterval == 0 {

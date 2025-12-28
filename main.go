@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
+	"log/slog"
 	"os"
 
 	"github.com/pavelpuchok/insightcourier/config"
@@ -13,6 +15,8 @@ import (
 )
 
 func main() {
+	ctx := context.Background()
+
 	cfgPath := flag.String("config", os.Getenv("IC_CONFIG_PATH"), "path to config file")
 	flag.Parse()
 
@@ -31,12 +35,12 @@ func main() {
 		panic(err)
 	}
 
-	s, err := storage.NewFileStorage(cfg.FileStorage)
+	queue := make(chan Job)
+
+	s, err := storage.NewPostgreSQL(ctx, cfg.PSQLStorage)
 	if err != nil {
 		panic(err)
 	}
-
-	queue := make(chan Job)
 
 	w := &Worker{
 		Queue:    queue,
@@ -46,8 +50,20 @@ func main() {
 
 	p := &planner.InMemoryPlanner{}
 
-	for _, src := range cfg.RSSSources {
-		job := rss(src.FeedURL, queue)
+	for name := range cfg.RSSSources {
+		id, err := s.CreateSource(ctx, name)
+		if err != nil {
+			if errors.Is(err, storage.ErrSourceAlreadyExists) {
+				slog.Debug("Source already created", slog.String("source.name", name))
+				continue
+			}
+			panic(err)
+		}
+		slog.Info("New source created", slog.String("source.name", name), slog.Int("source.id", int(id)))
+	}
+
+	for name, src := range cfg.RSSSources {
+		job := rss(name, src.FeedURL, queue)
 		p.AddJob(context.Background(), src.UpdateInterval, job)
 	}
 
@@ -56,12 +72,12 @@ func main() {
 	select {}
 }
 
-func rss(source string, queue chan Job) func() {
-	rss := feed.NewRSS(source)
+func rss(name string, feedURL string, queue chan Job) func() {
+	rss := feed.NewRSS(feedURL)
 	return func() {
 		queue <- Job{
-			Source:  source,
-			Fetcher: rss,
+			SourceName: name,
+			Fetcher:    rss,
 		}
 	}
 }

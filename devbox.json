@@ -1,12 +1,15 @@
 {
   "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.16.0/.schema/devbox.schema.json",
   "env": {
-    "CGO_ENABLED": "0"
+    "CGO_ENABLED": "0",
+    "IC_PSQL_CONNECTION_STRING": "postgresql://localhost:5432/insightcourier"
   },
   "env_from": "secrets.env",
   "packages": [
     "go@latest",
-    "postgresql_18@18.1"
+    "postgresql_18@18.1",
+    "sqlc@1.30.0",
+    "sql-migrate@1.8.1"
   ],
   "shell": {
     "init_hook": [],

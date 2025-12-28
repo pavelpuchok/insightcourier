@@ -11,8 +11,8 @@ import (
 )
 
 type Storage interface {
-	GetSourceUpdateTime(source string) (*time.Time, error)
-	SetSourceUpdateTime(source string, t time.Time) error
+	GetSourceUpdateTime(ctx context.Context, source string) (*time.Time, error)
+	SetSourceUpdateTime(ctx context.Context, source string, t time.Time) error
 }
 
 type Fetcher interface {
@@ -24,8 +24,8 @@ type Reporter interface {
 }
 
 type Job struct {
-	Source  string
-	Fetcher Fetcher
+	SourceName string
+	Fetcher    Fetcher
 }
 
 type Worker struct {
@@ -40,7 +40,7 @@ func (w *Worker) Process(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case job := <-w.Queue:
-			t, err := w.Storage.GetSourceUpdateTime(job.Source)
+			t, err := w.Storage.GetSourceUpdateTime(ctx, job.SourceName)
 			if err != nil {
 				if !errors.Is(err, storage.ErrSourceNotFound) {
 					slog.Error("Failed to read storage", slog.String("error", err.Error()))
@@ -69,7 +69,7 @@ func (w *Worker) Process(ctx context.Context) {
 				}
 			}
 
-			err = w.Storage.SetSourceUpdateTime(job.Source, maxT)
+			err = w.Storage.SetSourceUpdateTime(ctx, job.SourceName, maxT)
 			if err != nil {
 				slog.Error("Failed to update storage", slog.String("error", err.Error()))
 				continue

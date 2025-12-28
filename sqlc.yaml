@@ -1,0 +1,11 @@
+version: "2"
+servers: []
+sql:
+  - engine: postgresql
+    queries: ./db/queries/sources.sql
+    schema: ./db/migrations
+    gen:
+      go:
+        package: psql
+        out: ./storage/psql/
+        sql_package: pgx/v5

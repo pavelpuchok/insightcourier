@@ -2,4 +2,7 @@ package storage
 
 import "errors"
 
-var ErrSourceNotFound = errors.New("source not found")
+var (
+	ErrSourceAlreadyExists = errors.New("source already exists")
+	ErrSourceNotFound      = errors.New("source not found")
+)

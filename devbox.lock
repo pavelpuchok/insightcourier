@@ -269,6 +269,102 @@
           "store_path": "/nix/store/4bfinz5vgvk0q65g8zrwh72ra9b7dc4a-postgresql-18.1"
         }
       }
+    },
+    "sql-migrate@1.8.1": {
+      "last_modified": "2025-11-25T14:41:04Z",
+      "resolved": "github:NixOS/nixpkgs/dc205f7b4fdb04c8b7877b43edb7b73be7730081#sql-migrate",
+      "source": "devbox-search",
+      "version": "1.8.1",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/hqf42zlk7jpzp4fwwyvj4kb29f63l8dr-sql-migrate-1.8.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/hqf42zlk7jpzp4fwwyvj4kb29f63l8dr-sql-migrate-1.8.1"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/dxvbgd7vi9436zvzkkadm5nglbs5gssl-sql-migrate-1.8.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/dxvbgd7vi9436zvzkkadm5nglbs5gssl-sql-migrate-1.8.1"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/8bfpfn2nzxdlfgw3j11ql20ihyd9p4l1-sql-migrate-1.8.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/8bfpfn2nzxdlfgw3j11ql20ihyd9p4l1-sql-migrate-1.8.1"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/1kd8w8kc205njd53gml3f8hika93dw8v-sql-migrate-1.8.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/1kd8w8kc205njd53gml3f8hika93dw8v-sql-migrate-1.8.1"
+        }
+      }
+    },
+    "sqlc@1.30.0": {
+      "last_modified": "2025-11-23T21:50:36Z",
+      "resolved": "github:NixOS/nixpkgs/ee09932cedcef15aaf476f9343d1dea2cb77e261#sqlc",
+      "source": "devbox-search",
+      "version": "1.30.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/yvjcj4hcg2kshv16dv8niplkr0hwvfmc-sqlc-1.30.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/yvjcj4hcg2kshv16dv8niplkr0hwvfmc-sqlc-1.30.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/y2bcgpg0fp1qh24p7q50w2y1yb013cs2-sqlc-1.30.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/y2bcgpg0fp1qh24p7q50w2y1yb013cs2-sqlc-1.30.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/jnlpcv1xd92b5fnxh7yrywb0989ii67r-sqlc-1.30.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/jnlpcv1xd92b5fnxh7yrywb0989ii67r-sqlc-1.30.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/c5rz9zaxbzky25slvah9g24r8ckl47p4-sqlc-1.30.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/c5rz9zaxbzky25slvah9g24r8ckl47p4-sqlc-1.30.0"
+        }
+      }
     }
   }
 }

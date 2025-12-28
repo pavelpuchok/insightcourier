@@ -1,0 +1,5 @@
+development:
+  dialect: postgres
+  datasource: dbname=insightcourier sslmode=disable
+  dir: db/migrations/
+  table: migrations
