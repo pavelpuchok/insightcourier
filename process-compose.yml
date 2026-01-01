@@ -1,0 +1,6 @@
+version: "0.5"
+processes:
+  flaresolverr:
+    command: flaresolverr
+    availability:
+      restart: "always"

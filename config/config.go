@@ -27,10 +27,15 @@ type TelegramConfig struct {
 	ChatID int64  `json:"chatId"`
 }
 
+type FlareSolverrConfig struct {
+	URL string `json:"url"`
+}
+
 type Config struct {
-	RSSSources  map[string]RSSSourceConfig `json:"rssSources"`
-	Telegram    TelegramConfig             `json:"telegram"`
-	PSQLStorage PSQLStorageConfig          `json:"psqlStorage"`
+	RSSSources   map[string]RSSSourceConfig `json:"rssSources"`
+	Telegram     TelegramConfig             `json:"telegram"`
+	PSQLStorage  PSQLStorageConfig          `json:"psqlStorage"`
+	FlareSolverr FlareSolverrConfig         `json:"flareSolverr"`
 }
 
 var (
