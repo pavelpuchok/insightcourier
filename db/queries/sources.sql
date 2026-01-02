@@ -10,3 +10,6 @@ RETURNING source_id;
 UPDATE SOURCES
   SET last_fetched_at = $2, updated_at = CURRENT_TIMESTAMP
 WHERE name = $1;
+
+-- name: GetSourceIdByName :one
+SELECT source_id FROM sources WHERE name = $1;

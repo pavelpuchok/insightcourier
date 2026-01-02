@@ -15,3 +15,15 @@ type Source struct {
 	CreatedAt     pgtype.Timestamp
 	UpdatedAt     pgtype.Timestamp
 }
+
+type SourcesItem struct {
+	SourceItemID int32
+	SourceID     pgtype.Int4
+	Url          pgtype.Text
+	Title        pgtype.Text
+	TextContent  pgtype.Text
+	Excerpt      pgtype.Text
+	Language     pgtype.Text
+	PublishedAt  pgtype.Timestamptz
+	CreatedAt    pgtype.Timestamp
+}

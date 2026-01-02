@@ -9,6 +9,7 @@ import (
 
 	"github.com/pavelpuchok/insightcourier/config"
 	"github.com/pavelpuchok/insightcourier/feed"
+	"github.com/pavelpuchok/insightcourier/flaresolverr"
 	"github.com/pavelpuchok/insightcourier/planner"
 	"github.com/pavelpuchok/insightcourier/storage"
 	"github.com/pavelpuchok/insightcourier/tg"
@@ -42,12 +43,6 @@ func main() {
 		panic(err)
 	}
 
-	w := &Worker{
-		Queue:    queue,
-		Storage:  s,
-		Reporter: bot,
-	}
-
 	p := &planner.InMemoryPlanner{}
 
 	for name := range cfg.RSSSources {
@@ -62,22 +57,26 @@ func main() {
 		slog.Info("New source created", slog.String("source.name", name), slog.Int("source.id", int(id)))
 	}
 
+	w := &Worker{
+		Queue:       queue,
+		Storage:     s,
+		Reporter:    bot,
+		Fetchers:    make(map[string]Fetcher, len(cfg.RSSSources)),
+		FlareSolver: &flaresolverr.FlareSolverr{URL: cfg.FlareSolverr.URL},
+	}
+
 	for name, src := range cfg.RSSSources {
-		job := rss(name, src.FeedURL, queue)
-		p.AddJob(context.Background(), src.UpdateInterval, job)
+		w.Fetchers[name] = feed.NewRSS(src.FeedURL)
+		enqeueJob := func() {
+			queue <- Job{
+				SourceName: name,
+			}
+		}
+
+		p.AddJob(context.Background(), src.UpdateInterval, enqeueJob)
 	}
 
 	go w.Process(context.Background())
 
 	select {}
-}
-
-func rss(name string, feedURL string, queue chan Job) func() {
-	rss := feed.NewRSS(feedURL)
-	return func() {
-		queue <- Job{
-			SourceName: name,
-			Fetcher:    rss,
-		}
-	}
 }

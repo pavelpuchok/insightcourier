@@ -2,7 +2,7 @@ version: "2"
 servers: []
 sql:
   - engine: postgresql
-    queries: ./db/queries/sources.sql
+    queries: ./db/queries/
     schema: ./db/migrations
     gen:
       go:

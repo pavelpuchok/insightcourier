@@ -29,6 +29,17 @@ func (q *Queries) CreateSource(ctx context.Context, arg CreateSourceParams) (int
 	return source_id, err
 }
 
+const getSourceIdByName = `-- name: GetSourceIdByName :one
+SELECT source_id FROM sources WHERE name = $1
+`
+
+func (q *Queries) GetSourceIdByName(ctx context.Context, name string) (int32, error) {
+	row := q.db.QueryRow(ctx, getSourceIdByName, name)
+	var source_id int32
+	err := row.Scan(&source_id)
+	return source_id, err
+}
+
 const getSourceLastFetchedAtByName = `-- name: GetSourceLastFetchedAtByName :one
 SELECT last_fetched_at FROM sources WHERE name = $1
 `
