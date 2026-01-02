@@ -106,8 +106,6 @@ func (w *Worker) processJob(ctx context.Context, job Job) error {
 		if err := w.report(ctx, job, it); err != nil {
 			return fmt.Errorf("failed to report feed item. Link: %s. %w", it.Link, err)
 		}
-
-		w.report(ctx, job, it)
 	}
 
 	err = w.Storage.SetSourceUpdateTime(ctx, job.SourceName, maxT)
