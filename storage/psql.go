@@ -131,16 +131,16 @@ type AddSourceItemData struct {
 	PublishedAt time.Time
 }
 
-func (pq *PostgreSQL) AddSourceItem(ctx context.Context, item AddSourceItemData) error {
+func (pq *PostgreSQL) AddSourceItem(ctx context.Context, item AddSourceItemData) (int32, error) {
 	q := pq.getQueriesFromContext(ctx)
 	cctx, cancel := context.WithTimeout(ctx, pq.timeout)
 	defer cancel()
 
 	source_id, err := q.GetSourceIdByName(cctx, item.SourceName)
 	if err != nil {
-		return fmt.Errorf("failed to get source ID. %w", err)
+		return 0, fmt.Errorf("failed to get source ID. %w", err)
 	}
-	_, err = q.CreateSourceItem(cctx, psql.CreateSourceItemParams{
+	sid, err := q.CreateSourceItem(cctx, psql.CreateSourceItemParams{
 		SourceID:    pgtype.Int4{Int32: source_id, Valid: true},
 		Url:         pgtype.Text{String: item.SourceName, Valid: true},
 		Title:       pgtype.Text{String: item.Title, Valid: true},
@@ -150,7 +150,7 @@ func (pq *PostgreSQL) AddSourceItem(ctx context.Context, item AddSourceItemData)
 		PublishedAt: pgtype.Timestamptz{Time: item.PublishedAt, Valid: true},
 	})
 	if err != nil {
-		return fmt.Errorf("failed to create source item. %w", err)
+		return 0, fmt.Errorf("failed to create source item. %w", err)
 	}
-	return nil
+	return sid, nil
 }

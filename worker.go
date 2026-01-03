@@ -21,7 +21,7 @@ type Storage interface {
 	RollbackTxInContext(ctx context.Context) error
 	GetSourceUpdateTime(ctx context.Context, source string) (*time.Time, error)
 	SetSourceUpdateTime(ctx context.Context, source string, t time.Time) error
-	AddSourceItem(ctx context.Context, item storage.AddSourceItemData) error
+	AddSourceItem(ctx context.Context, item storage.AddSourceItemData) (int32, error)
 }
 
 type Fetcher interface {
@@ -29,7 +29,7 @@ type Fetcher interface {
 }
 
 type Reporter interface {
-	Report(context.Context, feed.Item) error
+	Report(context.Context, feed.Item, int32) error
 }
 
 type Job struct {
@@ -99,11 +99,12 @@ func (w *Worker) processJob(ctx context.Context, job Job) error {
 			maxT = it.Time
 		}
 
-		if err := w.parseContent(ctx, job, it); err != nil {
+		sid, err := w.parseContent(ctx, job, it)
+		if err != nil {
 			return fmt.Errorf("failed to parse content. Link: %s. %w", it.Link, err)
 		}
 
-		if err := w.report(ctx, job, it); err != nil {
+		if err := w.report(ctx, job, it, sid); err != nil {
 			return fmt.Errorf("failed to report feed item. Link: %s. %w", it.Link, err)
 		}
 	}
@@ -116,42 +117,42 @@ func (w *Worker) processJob(ctx context.Context, job Job) error {
 	return nil
 }
 
-func (w Worker) report(ctx context.Context, job Job, it feed.Item) error {
-	err := w.Reporter.Report(ctx, it)
+func (w Worker) report(ctx context.Context, job Job, it feed.Item, sid int32) error {
+	err := w.Reporter.Report(ctx, it, sid)
 	if err != nil {
 		return fmt.Errorf("fail to report feed item (link: %s): %w", it.Link, err)
 	}
 	return nil
 }
 
-func (w Worker) parseContent(ctx context.Context, job Job, it feed.Item) error {
+func (w Worker) parseContent(ctx context.Context, job Job, it feed.Item) (int32, error) {
 	fsResp, err := w.FlareSolver.Get(it.Link, flaresolverr.WithDisabledMedia())
 	if err != nil {
-		return fmt.Errorf("fail to get feed item content: %w", err)
+		return 0, fmt.Errorf("fail to get feed item content: %w", err)
 	}
 
 	if fsResp.Status != "ok" {
-		return fmt.Errorf("unexpected FlareSolverr status: status=%s message=%s", fsResp.Status, fsResp.Message)
+		return 0, fmt.Errorf("unexpected FlareSolverr status: status=%s message=%s", fsResp.Status, fsResp.Message)
 	}
 
 	p := readability.NewParser()
 	u, err := url.ParseRequestURI(it.Link)
 	if err != nil {
-		return fmt.Errorf("failed to parse link")
+		return 0, fmt.Errorf("failed to parse link")
 	}
 
 	article, err := p.Parse(strings.NewReader(fsResp.Solution.Response), u)
 	if err != nil {
-		return fmt.Errorf("readability failed to parse article: %w", err)
+		return 0, fmt.Errorf("readability failed to parse article: %w", err)
 	}
 
 	b := &strings.Builder{}
 	err = article.RenderText(b)
 	if err != nil {
-		return fmt.Errorf("readability failed to render article text: %w", err)
+		return 0, fmt.Errorf("readability failed to render article text: %w", err)
 	}
 
-	err = w.Storage.AddSourceItem(ctx, storage.AddSourceItemData{
+	sid, err := w.Storage.AddSourceItem(ctx, storage.AddSourceItemData{
 		SourceName:  job.SourceName,
 		URL:         it.Link,
 		Title:       article.Title(),
@@ -161,7 +162,8 @@ func (w Worker) parseContent(ctx context.Context, job Job, it feed.Item) error {
 		PublishedAt: it.Time,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to save source item: %w", err)
+		return 0, fmt.Errorf("failed to save source item: %w", err)
 	}
-	return nil
+
+	return sid, nil
 }

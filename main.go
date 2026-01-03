@@ -6,6 +6,7 @@ import (
 	"flag"
 	"log/slog"
 	"os"
+	"os/signal"
 
 	"github.com/pavelpuchok/insightcourier/config"
 	"github.com/pavelpuchok/insightcourier/feed"
@@ -16,7 +17,8 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
 
 	cfgPath := flag.String("config", os.Getenv("IC_CONFIG_PATH"), "path to config file")
 	flag.Parse()
@@ -35,6 +37,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	go bot.ListenUpdates(ctx)
 
 	queue := make(chan Job)
 
@@ -77,6 +80,5 @@ func main() {
 	}
 
 	go w.Process(context.Background())
-
-	select {}
+	<-ctx.Done()
 }

@@ -4,7 +4,7 @@ go 1.25.2
 
 require (
 	codeberg.org/readeck/go-readability/v2 v2.1.0
-	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
+	github.com/go-telegram/bot v1.17.0
 	github.com/jackc/pgerrcode v0.0.0-20250907135507-afb5586c32a6
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/mmcdole/gofeed v1.3.0
