@@ -11,16 +11,26 @@ import (
 	"github.com/go-telegram/bot/models"
 	"github.com/pavelpuchok/insightcourier/config"
 	"github.com/pavelpuchok/insightcourier/feed"
+	"github.com/pavelpuchok/insightcourier/storage/psql"
 )
 
-type Bot struct {
-	b      *bot.Bot
-	chatId int64
+type Storage interface {
+	BeginTxInContext(ctx context.Context) (context.Context, error)
+	CommitTxInContext(ctx context.Context) error
+	RollbackTxInContext(ctx context.Context) error
+	CreateReaction(ctx context.Context, sourceItemID int32, reactionType psql.ReactionsType) error
 }
 
-func NewBot(cfg config.TelegramConfig) (*Bot, error) {
+type Bot struct {
+	b       *bot.Bot
+	storage Storage
+	chatId  int64
+}
+
+func NewBot(storage Storage, cfg config.TelegramConfig) (*Bot, error) {
 	b := &Bot{
-		chatId: cfg.ChatID,
+		chatId:  cfg.ChatID,
+		storage: storage,
 	}
 
 	bot, err := bot.New(cfg.APIKey, bot.WithCallbackQueryDataHandler("btn;", bot.MatchTypePrefix, b.handleCallback))
@@ -36,15 +46,15 @@ func NewBot(cfg config.TelegramConfig) (*Bot, error) {
 type buttonType int8
 
 const (
-	like buttonType = iota
-	dislike
+	buttonTypeLike buttonType = iota
+	buttonTypeDislike
 )
 
 func (t buttonType) Emoji() string {
 	switch t {
-	case like:
+	case buttonTypeLike:
 		return "👍"
-	case dislike:
+	case buttonTypeDislike:
 		return "👎"
 	default:
 		return ""
@@ -88,8 +98,8 @@ func (b *Bot) Report(ctx context.Context, it feed.Item, sid int32) error {
 		ReplyMarkup: models.InlineKeyboardMarkup{
 			InlineKeyboard: [][]models.InlineKeyboardButton{
 				{
-					{Text: like.Emoji(), CallbackData: printButtonData(like, sid)},
-					{Text: dislike.Emoji(), CallbackData: printButtonData(dislike, sid)},
+					{Text: buttonTypeLike.Emoji(), CallbackData: printButtonData(buttonTypeLike, sid)},
+					{Text: buttonTypeDislike.Emoji(), CallbackData: printButtonData(buttonTypeDislike, sid)},
 				},
 			},
 		},
@@ -109,9 +119,24 @@ func (b *Bot) handleCallback(ctx context.Context, _ *bot.Bot, update *models.Upd
 		slog.Error("failed to answer callback query", slog.String("error", err.Error()))
 	}
 
-	err = b.handleButtonCallback(ctx, update)
+	cctx, err := b.storage.BeginTxInContext(ctx)
+	if err != nil {
+		slog.Error("failed to initiate transaction for callback query processing", slog.String("error", err.Error()))
+		return
+	}
+
+	err = b.handleButtonCallback(cctx, update)
 	if err != nil {
 		slog.Error("failed process button callback", slog.String("error", err.Error()))
+		if err := b.storage.RollbackTxInContext(cctx); err != nil {
+			slog.Error("failed to rollback transaction", slog.String("error", err.Error()))
+		}
+		return
+	}
+
+	err = b.storage.CommitTxInContext(cctx)
+	if err != nil {
+		slog.Error("failed to commit transaction for query callback", slog.String("error", err.Error()))
 	}
 }
 
@@ -147,7 +172,18 @@ func (b *Bot) handleButtonCallback(ctx context.Context, update *models.Update) e
 		},
 	})
 
-	slog.Info("processed callback query", slog.Int("sourceItemID", int(sid)))
+	var rt psql.ReactionsType
+	switch t {
+	case buttonTypeLike:
+		rt = psql.ReactionsTypeLike
+	case buttonTypeDislike:
+		rt = psql.ReactionsTypeDislike
+	}
+
+	err = b.storage.CreateReaction(ctx, sid, rt)
+	if err != nil {
+		return fmt.Errorf("failed to create reaction in storage. %w", err)
+	}
 
 	return nil
 }

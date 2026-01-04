@@ -33,18 +33,18 @@ func main() {
 		panic(err)
 	}
 
-	bot, err := tg.NewBot(cfg.Telegram)
+	s, err := storage.NewPostgreSQL(ctx, cfg.PSQLStorage)
+	if err != nil {
+		panic(err)
+	}
+
+	bot, err := tg.NewBot(s, cfg.Telegram)
 	if err != nil {
 		panic(err)
 	}
 	go bot.ListenUpdates(ctx)
 
 	queue := make(chan Job)
-
-	s, err := storage.NewPostgreSQL(ctx, cfg.PSQLStorage)
-	if err != nil {
-		panic(err)
-	}
 
 	p := &planner.InMemoryPlanner{}
 

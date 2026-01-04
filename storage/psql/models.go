@@ -5,8 +5,59 @@
 package psql
 
 import (
+	"database/sql/driver"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type ReactionsType string
+
+const (
+	ReactionsTypeLike    ReactionsType = "like"
+	ReactionsTypeDislike ReactionsType = "dislike"
+)
+
+func (e *ReactionsType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ReactionsType(s)
+	case string:
+		*e = ReactionsType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ReactionsType: %T", src)
+	}
+	return nil
+}
+
+type NullReactionsType struct {
+	ReactionsType ReactionsType
+	Valid         bool // Valid is true if ReactionsType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullReactionsType) Scan(value interface{}) error {
+	if value == nil {
+		ns.ReactionsType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ReactionsType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullReactionsType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ReactionsType), nil
+}
+
+type Reaction struct {
+	SourceItemID int32
+	Type         ReactionsType
+	CreatedAt    pgtype.Timestamp
+}
 
 type Source struct {
 	SourceID      int32

@@ -154,3 +154,15 @@ func (pq *PostgreSQL) AddSourceItem(ctx context.Context, item AddSourceItemData)
 	}
 	return sid, nil
 }
+func (pq *PostgreSQL) CreateReaction(ctx context.Context, sourceItemID int32, reactionType psql.ReactionsType) error {
+	q := pq.getQueriesFromContext(ctx)
+	cctx, cancel := context.WithTimeout(ctx, pq.timeout)
+	defer cancel()
+
+	err := q.CreateReaction(cctx, psql.CreateReactionParams{
+		SourceItemID: sourceItemID,
+		Type:         reactionType,
+	})
+
+	return err
+}
