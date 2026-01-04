@@ -142,7 +142,7 @@ func (pq *PostgreSQL) AddSourceItem(ctx context.Context, item AddSourceItemData)
 	}
 	sid, err := q.CreateSourceItem(cctx, psql.CreateSourceItemParams{
 		SourceID:    pgtype.Int4{Int32: source_id, Valid: true},
-		Url:         pgtype.Text{String: item.SourceName, Valid: true},
+		Url:         pgtype.Text{String: item.URL, Valid: true},
 		Title:       pgtype.Text{String: item.Title, Valid: true},
 		TextContent: pgtype.Text{String: item.TextContent, Valid: true},
 		Excerpt:     pgtype.Text{String: item.Excerpt, Valid: true},
